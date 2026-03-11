@@ -90,7 +90,7 @@ def generate_code():
 
 @app.get("/")
 def home():
-    return {"message": "Welcome to the URL shortener!"}
+    return FileResponse("index.html")
 
 
 @app.post("/register", status_code=201)
