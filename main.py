@@ -9,7 +9,7 @@ import string
 from database import engine, get_db, Base
 import models
 
-from pydantic import BaseModel, HttpUrl, field_validator, ConfigDict
+from pydantic import BaseModel, HttpUrl, field_validator, ConfigDict, EmailStr
 from fastapi.responses import FileResponse
 
 from auth import hash_password, verify_password, create_token, get_current_user
@@ -52,8 +52,18 @@ class URLRequest(BaseModel):
 
 
 class UserRequest(BaseModel):
-    email: str
+    email: EmailStr
     password: str
+
+    @field_validator("email")
+    @classmethod
+    def validate_email(cls, v):
+        # Make sure TLD is at least 2 characters
+        domain = v.split("@")[1]
+        tld = domain.split(".")[-1]
+        if len(tld) < 2:
+            raise ValueError("Please enter a valid email address")
+        return v
 
 
 class LinkResponse(BaseModel):
@@ -193,6 +203,15 @@ def delete_url(short_code: str, db: Session = Depends(get_db), current_user=Depe
     db.delete(url_entry)
     db.commit()
 
+    return None
+
+@app.delete("/user", status_code=204)
+def delete_account(db: Session = Depends(get_db), current_user=Depends(get_current_user)):
+    # Delete all links belonging to the user first
+    db.query(models.URL).filter(models.URL.user_id == current_user.id).delete()
+    # Then delete the user
+    db.delete(current_user)
+    db.commit()
     return None
 
 

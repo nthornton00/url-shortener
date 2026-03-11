@@ -214,7 +214,10 @@
   <div id="appSection">
     <div class="navbar">
       <span class="navbar-user" id="loggedInEmail"></span>
+      <div style="display:flex;gap:0.5rem;">
       <button class="btn btn-danger" style="width:auto;" onclick="logout()">Logout</button>
+      <button class="btn btn-danger" style="width:auto;opacity:0.6;" onclick="deleteAccount()">Delete Account</button>
+    </div>
     </div>
 
     <!-- Shorten form -->
@@ -325,7 +328,11 @@
         alert("Account created! Please log in.");
       } else {
         const data = await res.json();
-        showAlert("registerError", data.detail || "Registration failed");
+        if (res.status === 422) {
+          showAlert("registerError", "Please enter a valid email address");
+        } else {
+          showAlert("registerError", data.detail || "Registration failed");
+      }
       }
     }
 
@@ -523,6 +530,20 @@
         await loadLinks(); // Refresh list
       } else {
         alert("Delete failed");
+      }
+    }
+
+    async function deleteAccount() {
+      const confirmed = confirm("Are you sure you want to delete your account? This will delete all your links too and cannot be undone.");
+      if (!confirmed) return;
+
+      const res = await apiFetch("/user", { method: "DELETE" });
+
+      if (res.status === 204) {
+        alert("Account deleted successfully");
+        logout();
+      } else {
+      alert("Failed to delete account");
       }
     }
 
