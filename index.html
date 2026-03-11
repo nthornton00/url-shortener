@@ -407,7 +407,7 @@
       const data = await res.json();
       document.getElementById("urlInput").value = "";
       document.getElementById("customCode").value = "";
-      showAlert("shortenSuccess", `✅ Created Link: http://127.0.0.1:8000/${data.short_code}`);
+      showAlert("shortenSuccess", `✅ Created: ${window.location.origin}/${data.short_code}`);
       await loadLinks(); // Refresh the links list
     }
 
@@ -448,9 +448,9 @@
           <!-- Stats Panel -->
           <div class="stats-panel" id="stats-${link.id}">
             <div class="stat-row">
-              <span class="stat-label">Short URL</span>
-              <span class="stat-value">http://127.0.0.1:8000/${link.short_code}</span>
-            </div>
+            <span class="stat-label">Short URL</span>
+            <span class="stat-value">${window.location.origin}/${link.short_code}</span>
+          </div>
             <div class="stat-row">
               <span class="stat-label">Clicks</span>
               <span class="stat-value">${link.access_count}</span>
