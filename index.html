@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>URL Shortener</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 680px;
+      margin: 60px auto;
+      padding: 0 1rem 4rem;
+      background: #0f0f0f;
+      color: #e8e8e8;
+    }
+
+    h1 { text-align: center; color: #ffffff; margin-bottom: 0.25rem; }
+    .subtitle { text-align: center; color: #555; font-size: 0.9rem; margin-bottom: 2rem; }
+
+    .card {
+      background: #1a1a1a;
+      padding: 1.5rem;
+      border-radius: 10px;
+      border: 1px solid #2a2a2a;
+      margin-bottom: 1rem;
+    }
+
+    .card h2 { margin-bottom: 1.25rem; font-size: 1rem; color: #aaa; }
+
+    input {
+      width: 100%;
+      padding: 0.75rem;
+      font-size: 1rem;
+      border: 1px solid #333;
+      border-radius: 6px;
+      margin-bottom: 1rem;
+      background: #111;
+      color: #e8e8e8;
+    }
+
+    input::placeholder { color: #555; }
+    input:focus { outline: none; border-color: #4f46e5; }
+
+    .btn {
+      padding: 0.65rem 1.1rem;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+
+    .btn:hover { opacity: 0.85; }
+    .btn-primary { background: #4f46e5; color: white; width: 100%; margin-bottom: 0.5rem; font-size: 1rem; padding: 0.75rem; }
+    .btn-secondary { background: #222; color: #aaa; border: 1px solid #333; }
+    .btn-success { background: #14532d; color: #4ade80; border: 1px solid #166534; }
+    .btn-danger { background: #2b0d0d; color: #f87171; border: 1px solid #7f1d1d; }
+    .btn-info { background: #1e3a5f; color: #60a5fa; border: 1px solid #1d4ed8; }
+
+    .alert {
+      padding: 0.75rem 1rem;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      margin-top: 0.75rem;
+      display: none;
+    }
+
+    .alert-success { background: #0d2b1a; border: 1px solid #1a4d2e; color: #4ade80; }
+    .alert-error { background: #2b0d0d; border: 1px solid #4d1a1a; color: #f87171; }
+
+    .tabs { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; }
+    .tab {
+      flex: 1; padding: 0.6rem;
+      background: #1a1a1a; border: 1px solid #2a2a2a;
+      border-radius: 6px; color: #aaa;
+      cursor: pointer; text-align: center;
+    }
+    .tab.active { background: #4f46e5; color: white; border-color: #4f46e5; }
+
+    .navbar {
+      display: flex; justify-content: space-between;
+      align-items: center; margin-bottom: 1.5rem;
+    }
+    .navbar-user { color: #4ade80; font-size: 0.9rem; }
+
+    /* Links list */
+    .section-title {
+      font-size: 0.75rem;
+      letter-spacing: 0.1em;
+      color: #555;
+      text-transform: uppercase;
+      margin: 1.5rem 0 0.75rem;
+    }
+
+    .link-card {
+      background: #1a1a1a;
+      border: 1px solid #2a2a2a;
+      border-radius: 10px;
+      padding: 1rem 1.25rem;
+      margin-bottom: 0.75rem;
+      transition: border-color 0.2s;
+    }
+
+    .link-card:hover { border-color: #3a3a3a; }
+
+    .link-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .link-info { flex: 1; min-width: 0; }
+
+    .link-code {
+      font-family: monospace;
+      font-size: 1rem;
+      color: #4f46e5;
+      font-weight: bold;
+    }
+
+    .link-url {
+      font-size: 0.82rem;
+      color: #555;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-top: 0.2rem;
+    }
+
+    .link-actions { display: flex; gap: 0.5rem; flex-shrink: 0; }
+
+    /* Stats panel */
+    .stats-panel {
+      margin-top: 1rem;
+      padding: 1rem;
+      background: #111;
+      border-radius: 6px;
+      border: 1px solid #2a2a2a;
+      font-size: 0.85rem;
+      display: none;
+    }
+
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.35rem 0;
+      border-bottom: 1px solid #222;
+    }
+
+    .stat-row:last-child { border-bottom: none; }
+    .stat-label { color: #555; }
+    .stat-value { font-family: monospace; color: #e8e8e8; }
+
+    /* Edit panel */
+    .edit-panel {
+      margin-top: 1rem;
+      display: none;
+    }
+
+    .edit-panel input { margin-bottom: 0.5rem; }
+    .edit-actions { display: flex; gap: 0.5rem; }
+    .edit-actions .btn { flex: 1; }
+
+    .empty-state {
+      text-align: center;
+      padding: 2rem;
+      color: #444;
+      font-size: 0.9rem;
+    }
+
+    footer {
+  position: fixed;
+  bottom: 1rem;
+  right: 1rem;
+  color: #444;
+  font-size: 0.85rem;
+}
+    #authSection { display: block; }
+    #appSection { display: none; }
+  </style>
+</head>
+<body>
+
+  <h1>URL Shortener</h1>
+  <p class="subtitle"></p>
+  <!-- Auth Section -->
+  <div id="authSection">
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab('login')">Login</div>
+      <div class="tab" onclick="switchTab('register')">Register</div>
+    </div>
+
+    <div class="card" id="loginForm">
+      <h2>Welcome back</h2>
+      <input type="email" id="loginEmail" placeholder="Email"/>
+      <input type="password" id="loginPassword" placeholder="Password"/>
+      <button class="btn btn-primary" onclick="login()">Login</button>
+      <div class="alert alert-error" id="loginError"></div>
+    </div>
+
+    <div class="card" id="registerForm" style="display:none;">
+      <h2>Create an account</h2>
+      <input type="email" id="registerEmail" placeholder="Email"/>
+      <input type="password" id="registerPassword" placeholder="Password"/>
+      <button class="btn btn-primary" onclick="register()">Register</button>
+      <div class="alert alert-error" id="registerError"></div>
+    </div>
+  </div>
+
+  <!-- App Section -->
+  <div id="appSection">
+    <div class="navbar">
+      <span class="navbar-user" id="loggedInEmail"></span>
+      <button class="btn btn-danger" style="width:auto;" onclick="logout()">Logout</button>
+    </div>
+
+    <!-- Shorten form -->
+    <div class="card">
+      <h2>Shorten any URL 👇</h2>
+      <input type="url" id="urlInput" placeholder="https://your-long-url.com"/>
+      <input type="text" id="customCode" placeholder="Custom short code (optional)"/>
+      <button class="btn btn-primary" onclick="shortenURL()">Shorten</button>
+      <div class="alert alert-success" id="shortenSuccess"></div>
+      <div class="alert alert-error" id="shortenError"></div>
+    </div>
+
+    <!-- Links list -->
+    <div class="section-title">Your Links</div>
+    <div id="linksList"></div>
+  </div>
+
+  <script>
+    // ============================================================
+    // STATE — single source of truth
+    // ============================================================
+    let token = null;
+    let links = [];
+
+    // ============================================================
+    // API HELPERS — all fetch calls go through these functions
+    // ============================================================
+
+    async function apiFetch(path, options = {}) {
+      const headers = { "Content-Type": "application/json" };
+      if (token) headers["Authorization"] = `Bearer ${token}`;
+      const res = await fetch(path, { ...options, headers });
+      return res;
+    }
+
+    async function apiFormFetch(path, body) {
+      const res = await fetch(path, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body
+      });
+      return res;
+    }
+    // ============================================================
+    // SESSION HELPERS — handle expired tokens across all API calls
+    // ============================================================
+
+    async function handleExpired(res) {
+    if (res.status === 401) {
+      alert("Your session has expired — please log in again");
+      logout();
+      return true;  // tells the calling function to stop
+    }
+      return false;  // tells the calling function to continue
+    }
+
+    // ============================================================
+    // UI HELPERS — reusable functions for showing/hiding things
+    // ============================================================
+
+    function showAlert(id, message) {
+      const el = document.getElementById(id);
+      el.textContent = message;
+      el.style.display = "block";
+    }
+
+    function hideAlert(id) {
+      document.getElementById(id).style.display = "none";
+    }
+
+    function switchTab(tab) {
+      const isLogin = tab === "login";
+      document.getElementById("loginForm").style.display = isLogin ? "block" : "none";
+      document.getElementById("registerForm").style.display = isLogin ? "none" : "block";
+      document.querySelectorAll(".tab").forEach((t, i) => {
+        t.classList.toggle("active", isLogin ? i === 0 : i === 1);
+      });
+    }
+
+    function showApp(email) {
+      document.getElementById("authSection").style.display = "none";
+      document.getElementById("appSection").style.display = "block";
+      document.getElementById("loggedInEmail").textContent = `👤 ${email}`;
+    }
+
+    function showAuth() {
+      document.getElementById("authSection").style.display = "block";
+      document.getElementById("appSection").style.display = "none";
+    }
+
+    // ============================================================
+    // AUTH
+    // ============================================================
+
+    async function register() {
+      hideAlert("registerError");
+      const email = document.getElementById("registerEmail").value.trim();
+      const password = document.getElementById("registerPassword").value.trim();
+
+      const res = await apiFetch("/register", {
+        method: "POST",
+        body: JSON.stringify({ email, password })
+      });
+
+      if (res.status === 201) {
+        switchTab("login");
+        document.getElementById("loginEmail").value = email;
+        alert("Account created! Please log in.");
+      } else {
+        const data = await res.json();
+        showAlert("registerError", data.detail || "Registration failed");
+      }
+    }
+
+    async function login() {
+      hideAlert("loginError");
+      const email = document.getElementById("loginEmail").value.trim();
+      const password = document.getElementById("loginPassword").value.trim();
+
+      const formData = new URLSearchParams();
+      formData.append("username", email);
+      formData.append("password", password);
+
+      const res = await apiFormFetch("/login", formData);
+
+      if (res.ok) {
+        const data = await res.json();
+        token = data.access_token;
+        showApp(email);
+        await loadLinks();
+      } else {
+        showAlert("loginError", "Invalid email or password");
+      }
+    }
+
+    function logout() {
+      token = null;
+      links = [];
+      document.getElementById("urlInput").value = "";
+      document.getElementById("customCode").value = "";
+      document.getElementById("loginEmail").value = "";
+      document.getElementById("loginPassword").value = "";
+      hideAlert("shortenSuccess");  // Add this line
+      hideAlert("shortenError");    // Add this line too
+      showAuth();
+    }
+
+    // ============================================================
+    // SHORTEN
+    // ============================================================
+
+    async function shortenURL() {
+      hideAlert("shortenError");
+      hideAlert("shortenSuccess");
+
+      const url = document.getElementById("urlInput").value.trim();
+      const customCode = document.getElementById("customCode").value.trim();
+
+      if (!url) return showAlert("shortenError", "Please enter a URL");
+
+      const res = await apiFetch("/shorten", {
+        method: "POST",
+        body: JSON.stringify({ url, custom_code: customCode || null })
+      });
+
+      if (await handleExpired(res)) return;
+
+      if (res.status === 429) {
+        showAlert("shortenError", "Too many requests — please wait a minute before shortening again");
+        return;
+      }
+
+      if (res.status === 409) {
+        showAlert("shortenError", "That short code is already taken — please choose a different one");
+        return;
+      }
+
+      if (!res.ok) {
+        showAlert("shortenError", "Please enter a valid URL (must start with https:// and have a valid domain)");
+        return;
+      }
+
+      const data = await res.json();
+      document.getElementById("urlInput").value = "";
+      document.getElementById("customCode").value = "";
+      showAlert("shortenSuccess", `✅ Created Link: http://127.0.0.1:8000/${data.short_code}`);
+      await loadLinks(); // Refresh the links list
+    }
+
+    // ============================================================
+    // LINKS — load, render, update, delete
+    // ============================================================
+
+    async function loadLinks() {
+      const res = await apiFetch("/links");
+      if (!res.ok) return;
+      links = await res.json();
+      renderLinks();
+    }
+
+    function renderLinks() {
+      const container = document.getElementById("linksList");
+
+      if (links.length === 0) {
+        container.innerHTML = `<div class="empty-state">No links yet — shorten one above!</div>`;
+        return;
+      }
+
+      container.innerHTML = links.map(link => `
+        <div class="link-card" id="card-${link.id}">
+
+          <div class="link-header">
+            <div class="link-info">
+              <div class="link-code">/${link.short_code}</div>
+              <div class="link-url" title="${link.url}">${link.url}</div>
+            </div>
+            <div class="link-actions">
+              <button class="btn btn-info" onclick="toggleStats(${link.id})">Stats</button>
+              <button class="btn btn-secondary" onclick="toggleEdit(${link.id})">Edit</button>
+              <button class="btn btn-danger" onclick="deleteLink('${link.short_code}', ${link.id})">Delete</button>
+            </div>
+          </div>
+
+          <!-- Stats Panel -->
+          <div class="stats-panel" id="stats-${link.id}">
+            <div class="stat-row">
+              <span class="stat-label">Short URL</span>
+              <span class="stat-value">http://127.0.0.1:8000/${link.short_code}</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label">Clicks</span>
+              <span class="stat-value">${link.access_count}</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label">Created</span>
+              <span class="stat-value">${new Date(link.created_at).toLocaleString()}</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label">Updated</span>
+              <span class="stat-value">${new Date(link.updated_at).toLocaleString()}</span>
+            </div>
+          </div>
+
+          <!-- Edit Panel -->
+          <div class="edit-panel" id="edit-${link.id}">
+            <input
+              type="url"
+              id="editInput-${link.id}"
+              placeholder="New URL"
+              value="${link.url}"
+            />
+            <div class="edit-actions">
+              <button class="btn btn-success" onclick="updateLink('${link.short_code}', ${link.id})">Save</button>
+              <button class="btn btn-secondary" onclick="toggleEdit(${link.id})">Cancel</button>
+            </div>
+          </div>
+
+        </div>
+      `).join("");
+    }
+
+    function toggleStats(id) {
+      const panel = document.getElementById(`stats-${id}`);
+      const isOpen = panel.style.display === "block";
+      // Close all stats panels first
+      document.querySelectorAll(".stats-panel").forEach(p => p.style.display = "none");
+      panel.style.display = isOpen ? "none" : "block";
+    }
+
+    function toggleEdit(id) {
+      const panel = document.getElementById(`edit-${id}`);
+      const isOpen = panel.style.display === "block";
+      // Close all edit panels first
+      document.querySelectorAll(".edit-panel").forEach(p => p.style.display = "none");
+      panel.style.display = isOpen ? "none" : "block";
+    }
+
+    async function updateLink(shortCode, id) {
+      const newUrl = document.getElementById(`editInput-${id}`).value.trim();
+      if (!newUrl) return alert("Please enter a URL");
+
+      const res = await apiFetch(`/shorten/${shortCode}`, {
+        method: "PUT",
+        body: JSON.stringify({ url: newUrl })
+      });
+
+      if (await handleExpired(res)) return;  // add this line
+
+      if (res.ok) {
+    await loadLinks();
+  } else {
+    alert("Please enter a valid URL (must start with https:// and have a valid domain)");
+  }
+    }
+
+    async function deleteLink(shortCode, id) {
+      // Always confirm before destructive actions
+      const confirmed = confirm(`Are you sure you want to delete /${shortCode}?`);
+      if (!confirmed) return;
+
+      const res = await apiFetch(`/shorten/${shortCode}`, { method: "DELETE" });
+
+      if (await handleExpired(res)) return;
+
+      if (res.status === 204) {
+        await loadLinks(); // Refresh list
+      } else {
+        alert("Delete failed");
+      }
+    }
+
+    // ============================================================
+    // KEYBOARD SHORTCUTS
+    // ============================================================
+    document.addEventListener("keydown", e => {
+      if (e.key === "Enter" && token) shortenURL();
+    });
+  </script>
+<footer>
+    <p>Developed by Noah Thornton</p>
+  </footer>
+</body>
+</html>
