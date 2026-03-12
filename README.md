@@ -1,14 +1,14 @@
 # URL Shortener
 
-A full-stack URL shortening service built with FastAPI and PostgreSQL.
-Shorten long URLs, track clicks, and manage your links through a clean dark-themed UI.
+A full-stack URL shortening service built with FastAPI (REST APIs), PostgreSQL and JWT authentication.
+Shorten long URLs, track clicks, and manage your links through a simple, clean dark-themed UI.
 
 ## Live Demo
 https://url-shortener-production-bce7.up.railway.app/
 
 ## Tech Stack
 
-- **Backend:** Python, FastAPI
+- **Backend:** Python, FastAPI, REST API
 - **Database:** PostgreSQL, SQLAlchemy
 - **Authentication:** JWT tokens, bcrypt password hashing
 - **Frontend:** HTML, CSS, JavaScript
@@ -80,7 +80,7 @@ python -m uvicorn main:app --reload
 http://127.0.0.1:8000/ui
 ```
 
-## API Endpoints
+## REST API Endpoints
 
 | Method | Endpoint | Auth Required | Description |
 |--------|----------|---------------|-------------|
