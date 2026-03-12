@@ -77,6 +77,34 @@ class LinkResponse(BaseModel):
     updated_at: datetime
 
 
+class URLUpdate(BaseModel):
+    url: HttpUrl
+    new_code: Optional[str] = None
+
+    @field_validator("url")
+    @classmethod
+    def validate_url(cls, v):
+        url_str = str(v)
+        from urllib.parse import urlparse
+        host = urlparse(url_str).hostname
+        if not host:
+            raise ValueError("Invalid URL")
+
+        valid_tlds = [
+            "com", "org", "net", "io", "gov", "edu", "co",
+            "us", "uk", "ca", "au", "de", "fr", "jp", "sh",
+            "ai", "app", "dev", "xyz", "info", "me", "tv"
+        ]
+
+        parts = host.split(".")
+        tld = parts[-1].lower()
+
+        if tld not in valid_tlds:
+            raise ValueError(f"Invalid domain extension '.{tld}'")
+
+        return v
+
+
 # This creates the table in PostgreSQL if it doesn't exist yet
 Base.metadata.create_all(bind=engine)
 
@@ -158,7 +186,12 @@ def shorten_url(request: Request, data: URLRequest, db: Session = Depends(get_db
 
 @app.get("/links", response_model=list[LinkResponse])
 def get_my_links(db: Session = Depends(get_db), current_user=Depends(get_current_user)):
-    links = db.query(models.URL).filter(models.URL.user_id == current_user.id).all()
+    links = (
+        db.query(models.URL)
+        .filter(models.URL.user_id == current_user.id)
+        .order_by(models.URL.created_at.desc())
+        .all()
+    )
     return links
 
 
@@ -179,18 +212,31 @@ def get_stats(short_code: str, db: Session = Depends(get_db)):
 
 
 @app.put("/shorten/{short_code}")
-def update_url(short_code: str, data: URLRequest, db: Session = Depends(get_db),
+def update_url(short_code: str, data: URLUpdate, db: Session = Depends(get_db),
                current_user=Depends(get_current_user)):
     url_entry = db.query(models.URL).filter(models.URL.short_code == short_code).first()
 
     if not url_entry:
         raise HTTPException(status_code=404, detail="Short code not found")
 
+    # Update URL
     url_entry.url = str(data.url)
+
+    # If new code provided use it, if empty generate a random one
+    if data.new_code:
+        # Check if that code is already taken by another link
+        existing = db.query(models.URL).filter(models.URL.short_code == data.new_code).first()
+        if existing and existing.id != url_entry.id:
+            raise HTTPException(status_code=409, detail="That short code is already taken")
+        url_entry.short_code = data.new_code
+    else:
+        # Generate a fresh random code
+        url_entry.short_code = generate_code()
+
     db.commit()
     db.refresh(url_entry)
 
-    return {"short_code": short_code, "url": url_entry.url}
+    return {"short_code": url_entry.short_code, "url": url_entry.url}
 
 
 @app.delete("/shorten/{short_code}", status_code=204)

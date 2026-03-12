@@ -4,7 +4,7 @@ A full-stack URL shortening service built with FastAPI and PostgreSQL.
 Shorten long URLs, track clicks, and manage your links through a clean dark-themed UI.
 
 ## Live Demo
-Coming soon
+https://url-shortener-production-bce7.up.railway.app/
 
 ## Tech Stack
 

@@ -473,13 +473,18 @@
               placeholder="New URL"
               value="${link.url}"
             />
+            <input
+              type="text"
+              id="editCode-${link.id}"
+              placeholder="New short code (optional)"
+              value="${link.short_code}"
+            />
             <div class="edit-actions">
               <button class="btn btn-success" onclick="updateLink('${link.short_code}', ${link.id})">Save</button>
               <button class="btn btn-secondary" onclick="toggleEdit(${link.id})">Cancel</button>
             </div>
           </div>
-
-        </div>
+         </div>
       `).join("");
     }
 
@@ -501,20 +506,27 @@
 
     async function updateLink(shortCode, id) {
       const newUrl = document.getElementById(`editInput-${id}`).value.trim();
+      const newCode = document.getElementById(`editCode-${id}`).value.trim();
+
       if (!newUrl) return alert("Please enter a URL");
 
       const res = await apiFetch(`/shorten/${shortCode}`, {
-        method: "PUT",
-        body: JSON.stringify({ url: newUrl })
+      method: "PUT",
+      body: JSON.stringify({ url: newUrl, new_code: newCode || null })
       });
 
-      if (await handleExpired(res)) return;  // add this line
+      if (await handleExpired(res)) return;
+
+      if (res.status === 409) {
+        alert("That short code is already taken — please choose a different one");
+        return;
+      }
 
       if (res.ok) {
-    await loadLinks();
-  } else {
-    alert("Please enter a valid URL (must start with https:// and have a valid domain)");
-  }
+        await loadLinks();
+      } else {
+        alert("Please enter a valid URL (must start with https:// and have a valid domain)");
+      }
     }
 
     async function deleteLink(shortCode, id) {
